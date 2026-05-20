@@ -1,0 +1,33 @@
+[build]
+  command = "bun install && bun run build"
+  publish = "dist"
+
+[build.environment]
+  BUN_VERSION = "1.3.4"
+  NODE_ENV = "production"
+
+# Long-cache hashed bundler output
+[[headers]]
+  for = "/chunk-*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# PDF served inline so the iframe preview works
+[[headers]]
+  for = "/cv.pdf"
+  [headers.values]
+    Content-Type = "application/pdf"
+    Content-Disposition = "inline; filename=cv.pdf"
+    Cache-Control = "public, max-age=3600"
+
+# Allow PDF.js (and the iframe) to render same-origin
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+
+# SPA fallback (won't override static files that exist)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
