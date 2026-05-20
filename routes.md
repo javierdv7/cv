@@ -1,39 +1,21 @@
-1. contact.md (with links)
-   1. linkedin: javierdvt
-   2. github: javierdv7
-   3. email: javier@bylogos.io
-   4. twitter: javierdv07
-   5. instagram: jdavidv7
-2. interests.md (put LogOS related on top)
-    - Physical AI (Industrial AI)
-    - Robotics
-    - Automation
-    - IIoT (on top)
-    - Embedded Systems
-    - Computer Vision
-    - Clustering
-
-3. browser (when opened must show the browser window with the image of the opened link and if you click on the image it must open the link in a new tab)
-4. /projects
-   - must open a file explorer with dirs and files inside and must be browsable:
-   1. LogOS - opens browser at https://bylogos.io (logos-web picture)
-   2. Indies - opens browser at https://indies.la (indies.la picture)
-   3. CV - opens browser at https://vargastorres.cv (CV ascii logo visible)
-5. /skills
-   - must open a file explorer with dirs and files inside and must be browsable:
-   1. Coding - opens a file explorer with dirs and files inside and must be browsable:
-      1. Python - opens browser at https://www.python.org (python logo visible)
-      2. Java - opens browser at https://www.cplusplus.com (cplusplus logo visible)
-      3. JavaScript - opens browser at https://www.javascript.com (javascript logo visible)
-      4. Go
-   2. Frameworks - opens a file explorer with dirs and files inside and must be browsable:
-      dOCKER
-      Kubernetes
-      1. TensorFlow - opens browser at https://www.tensorflow.org (tensorflow logo visible)
-      2. PyTorch - opens browser at https://pytorch.org (pytorch logo visible)
-      3. React - opens browser at https://reactjs.org (react logo visible)
-
-add a new window under music (and remove the ARES name from music) and put "currently playing" that must be hardocded to (TLOZ Skyward Sword)
-
-and fit the wallpaper under the taskbar
-
+Let's add info about me and my past (images for each are already on /public/{} and must be renamed):
+1. studies.md
+   1. Computer Science Engineering Licenciate degree @ Pontifical Catholic University of Chile
+   2. BUS-154 Technical Program Management: Leading Teams and Delivering Results @ Stanford Continuing Studies
+   3. Leadership School @ Pontifical Catholic University of Chile
+   4. autodidact
+2. experiments.md
+   1. Record.ai: 
+      -  Platanus Hack 25
+      -  Human Enhancement Track
+      -  1st Place
+      -  an AI-powered engine that connects physical identity with digital presence. Our tool used facial recognition to trigger real-time web scraping, instantly retrieving a person's professional background and public data. We won this category because we delivered a seamless 'wow' factor that proved how AI can bridge the gap between offline interactions and online information.
+   2. Agentic AI Science Fair
+      -  Agentic Voice AI & Open Computer Vision Before ChatGPT went public
+      - RPI4 based
+   3. Magnetic Induction Generator at 12 yo
+3. projects.md (remove folder and put md)
+   1. LogOS - put clickable link to browser
+      1. LogOS is the infrastructure that digitizes your existing field without replacing it. We prepare your industry for the AI era: digital twins as real-time 3D visualizations with intelligent assistance — not an Excel spreadsheet. AND MORE INFO ABOUT IT, LOOK FOR IT ON THE PAGE
+   2. Indies - put clickable link to browser
+      1. hogar para los locos, ambiciosos y obsesos (put something like info for that phrase and whats indies. indies is a latam community for devs who are making cray stuff, like founders.inc / fr8 / etc for latam)

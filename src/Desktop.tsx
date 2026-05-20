@@ -224,7 +224,9 @@ export function Desktop() {
     { key: "about", label: "about.md", icon: <NotepadIcon />, activeId: "file:about", open: () => openFileById("about") },
     { key: "contact", label: "contact.md", icon: <NotepadIcon />, activeId: "file:contact", open: () => openFileById("contact") },
     { key: "interests", label: "interests.md", icon: <NotepadIcon />, activeId: "file:interests", open: () => openFileById("interests") },
-    { key: "projects", label: "projects", icon: <FolderIcon />, activeId: "explorer", open: () => openExplorer(["projects"]) },
+    { key: "studies", label: "studies.md", icon: <NotepadIcon />, activeId: "file:studies", open: () => openFileById("studies") },
+    { key: "experiments", label: "experiments.md", icon: <NotepadIcon />, activeId: "file:experiments", open: () => openFileById("experiments") },
+    { key: "projects", label: "projects.md", icon: <NotepadIcon />, activeId: "file:projects", open: () => openFileById("projects") },
     { key: "skills", label: "skills.md", icon: <NotepadIcon />, activeId: "file:skills", open: () => openFileById("skills") },
     { key: "cv", label: "cv.pdf", icon: <PdfIcon />, activeId: "pdf:/cv.pdf", open: () => openPdf("/cv.pdf", "cv.pdf — preview") },
     { key: "browser", label: "browser", icon: <BrowserIcon />, activeId: "browser", open: () => openBrowser("https://cv.local/") },
@@ -368,7 +370,7 @@ function Window({
 
       {w.kind === "txt" && (
         <div className="window-body">
-          <Markdown text={w.text ?? ""} />
+          <Markdown text={w.text ?? ""} onLink={url => openBrowser(url)} />
         </div>
       )}
 

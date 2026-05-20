@@ -412,6 +412,16 @@ html, body, #root {
   border-radius: 3px;
   font-size: 11px;
 }
+.md-img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 10px auto;
+  border: 1px solid var(--accent-line);
+  border-radius: 4px;
+  background: #050403;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+}
 
 /* Touch behavior */
 .dock-app, .dicon, .wc, .fx-entry, .fx-btn, .bw-tile, .urlbar-btn {

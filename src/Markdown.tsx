@@ -1,9 +1,20 @@
 import type { ReactNode } from "react";
 
 const INLINE_RE =
-  /(\*\*([^*]+)\*\*|`([^`]+)`|\[([^\]]+)\]\(([^)]+)\)|https?:\/\/[^\s)]+|[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,})/g;
+  /(!\[([^\]]*)\]\(([^)]+)\)|\*\*([^*]+)\*\*|`([^`]+)`|\[([^\]]+)\]\(([^)]+)\)|https?:\/\/[^\s)]+|[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,})/g;
 
-function inline(text: string, prefix = "x"): ReactNode[] {
+type Options = { onLink?: (url: string, label?: string) => void };
+
+function makeLinkHandler(href: string, opts: Options): React.MouseEventHandler<HTMLAnchorElement> | undefined {
+  if (!opts.onLink) return undefined;
+  if (href.startsWith("mailto:") || href.startsWith("tel:")) return undefined;
+  return e => {
+    e.preventDefault();
+    opts.onLink!(href);
+  };
+}
+
+function inline(text: string, prefix = "x", opts: Options = {}): ReactNode[] {
   const out: ReactNode[] = [];
   let last = 0;
   let m: RegExpExecArray | null;
@@ -12,18 +23,22 @@ function inline(text: string, prefix = "x"): ReactNode[] {
     const off = m.index;
     if (off > last) out.push(text.slice(last, off));
     const key = `${prefix}-${off}`;
-    if (m[2] != null) {
-      out.push(<strong key={key}>{m[2]}</strong>);
-    } else if (m[3] != null) {
+    if (m[2] != null && m[3] != null) {
+      // image ![alt](src)
+      out.push(<img key={key} className="md-img" src={m[3]} alt={m[2]} loading="lazy" />);
+    } else if (m[4] != null) {
+      out.push(<strong key={key}>{m[4]}</strong>);
+    } else if (m[5] != null) {
       out.push(
         <code key={key} className="md-code">
-          {m[3]}
+          {m[5]}
         </code>,
       );
-    } else if (m[4] != null && m[5] != null) {
+    } else if (m[6] != null && m[7] != null) {
+      const href = m[7];
       out.push(
-        <a key={key} href={m[5]} target="_blank" rel="noreferrer noopener">
-          {m[4]}
+        <a key={key} href={href} target="_blank" rel="noreferrer noopener" onClick={makeLinkHandler(href, opts)}>
+          {m[6]}
         </a>,
       );
     } else {
@@ -31,7 +46,7 @@ function inline(text: string, prefix = "x"): ReactNode[] {
       const isMail = url.includes("@") && !url.startsWith("http");
       const href = isMail ? `mailto:${url}` : url;
       out.push(
-        <a key={key} href={href} target="_blank" rel="noreferrer noopener">
+        <a key={key} href={href} target="_blank" rel="noreferrer noopener" onClick={makeLinkHandler(href, opts)}>
           {url}
         </a>,
       );
@@ -42,7 +57,8 @@ function inline(text: string, prefix = "x"): ReactNode[] {
   return out;
 }
 
-export function Markdown({ text }: { text: string }) {
+export function Markdown({ text, onLink }: { text: string; onLink?: (url: string, label?: string) => void }) {
+  const opts: Options = { onLink };
   const lines = text.split("\n");
   const blocks: ReactNode[] = [];
   let listBuf: string[] = [];
@@ -53,7 +69,7 @@ export function Markdown({ text }: { text: string }) {
       blocks.push(
         <ul key={`ul-${k++}`} className="md-ul">
           {items.map((l, i) => (
-            <li key={i}>{inline(l, `li-${k}-${i}`)}</li>
+            <li key={i}>{inline(l, `li-${k}-${i}`, opts)}</li>
           ))}
         </ul>,
       );
@@ -65,28 +81,28 @@ export function Markdown({ text }: { text: string }) {
       flushList();
       blocks.push(
         <h1 key={k++} className="md-h1">
-          {inline(line.slice(2))}
+          {inline(line.slice(2), `h1-${k}`, opts)}
         </h1>,
       );
     } else if (line.startsWith("## ")) {
       flushList();
       blocks.push(
         <h2 key={k++} className="md-h2">
-          {inline(line.slice(3))}
+          {inline(line.slice(3), `h2-${k}`, opts)}
         </h2>,
       );
     } else if (line.startsWith("### ")) {
       flushList();
       blocks.push(
         <h3 key={k++} className="md-h3">
-          {inline(line.slice(4))}
+          {inline(line.slice(4), `h3-${k}`, opts)}
         </h3>,
       );
     } else if (line.startsWith("> ")) {
       flushList();
       blocks.push(
         <blockquote key={k++} className="md-bq">
-          {inline(line.slice(2))}
+          {inline(line.slice(2), `bq-${k}`, opts)}
         </blockquote>,
       );
     } else if (line.startsWith("---")) {
@@ -101,7 +117,7 @@ export function Markdown({ text }: { text: string }) {
       flushList();
       blocks.push(
         <p key={k++} className="md-p">
-          {inline(line)}
+          {inline(line, `p-${k}`, opts)}
         </p>,
       );
     }

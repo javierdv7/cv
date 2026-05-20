@@ -32,6 +32,15 @@ const server = serve({
           "Content-Disposition": 'inline; filename="cv.pdf"',
         },
       }),
+    "/experiments/*": async req => {
+      const u = new URL(req.url);
+      const safe = u.pathname.replace(/\.\./g, "");
+      const file = Bun.file(`./public${safe}`);
+      if (!(await file.exists())) return new Response("Not Found", { status: 404 });
+      return new Response(file, {
+        headers: { "Cache-Control": "public, max-age=3600" },
+      });
+    },
     "/*": index,
   },
   development: process.env.NODE_ENV !== "production" && {
