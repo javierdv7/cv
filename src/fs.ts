@@ -66,7 +66,7 @@ export const ROOT: FsNode = {
         "- site: [bylogos.io](https://bylogos.io)",
         "- linkedin: [linkedin.com/in/javierdvt](https://linkedin.com/in/javierdvt)",
         "",
-        "Full résumé: [Javier_Vargas_CV.pdf](/Javier_Vargas_CV.pdf)",
+        "Full résumé: [cv.pdf](/cv.pdf)",
       ].join("\n"),
     },
     {

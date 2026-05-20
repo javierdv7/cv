@@ -17,7 +17,7 @@ import {
 type LinkNode = Extract<FsNode, { kind: "link" }>;
 type FileNode = Extract<FsNode, { kind: "file" }>;
 
-type WindowKind = "txt" | "browser" | "explorer" | "terminal";
+type WindowKind = "txt" | "browser" | "explorer" | "terminal" | "pdf";
 
 type OpenWindow = {
   id: string;
@@ -34,6 +34,7 @@ type OpenWindow = {
   explorerPath?: string[]; // for explorer
   browserUrl?: string;    // for browser
   browserLink?: LinkNode | null;
+  pdfUrl?: string;        // for pdf
 };
 
 let nextInstance = 1;
@@ -45,6 +46,7 @@ function defaultSize(kind: WindowKind): { w: number; h: number } {
     case "explorer": return { w: 520, h: 360 };
     case "browser": return { w: 680, h: 460 };
     case "terminal": return { w: 520, h: 300 };
+    case "pdf": return { w: 720, h: 560 };
   }
 }
 
@@ -167,6 +169,20 @@ export function Desktop() {
     );
   };
 
+  const openPdf = (url: string, title: string) => {
+    const size = defaultSize("pdf");
+    upsert(
+      `pdf:${url}`,
+      () => ({
+        id: `pdf:${url}`,
+        kind: "pdf",
+        title,
+        pdfUrl: url,
+        ...size,
+      }),
+    );
+  };
+
   const openTerminal = () => {
     const size = defaultSize("terminal");
     upsert(
@@ -193,7 +209,7 @@ export function Desktop() {
     { key: "interests", label: "interests.md", icon: <NotepadIcon />, activeId: "file:interests", open: () => openFileById("interests") },
     { key: "projects", label: "projects", icon: <FolderIcon />, activeId: "explorer", open: () => openExplorer(["projects"]) },
     { key: "skills", label: "skills.md", icon: <NotepadIcon />, activeId: "file:skills", open: () => openFileById("skills") },
-    { key: "cv", label: "Javier_Vargas_CV.pdf", icon: <PdfIcon />, activeId: "cv-pdf", open: () => window.open("/Javier_Vargas_CV.pdf", "_blank", "noopener,noreferrer") },
+    { key: "cv", label: "cv.pdf", icon: <PdfIcon />, activeId: "pdf:/cv.pdf", open: () => openPdf("/cv.pdf", "cv.pdf — preview") },
     { key: "browser", label: "browser", icon: <BrowserIcon />, activeId: "browser", open: () => openBrowser("https://cv.local/") },
     { key: "terminal", label: "terminal", icon: <TerminalIcon />, activeId: "terminal", open: openTerminal },
   ];
@@ -335,6 +351,16 @@ function Window({
       {w.kind === "terminal" && (
         <div className="window-body">
           <pre>{w.text ?? ""}</pre>
+        </div>
+      )}
+
+      {w.kind === "pdf" && (
+        <div className="window-body window-body-pdf">
+          <iframe
+            className="pdf-frame"
+            src={w.pdfUrl ?? ""}
+            title={w.title}
+          />
         </div>
       )}
     </div>

@@ -24,12 +24,12 @@ const server = serve({
       new Response(Bun.file("./public/iconcv.png"), {
         headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=86400" },
       }),
-    "/Javier_Vargas_CV.pdf": () =>
-      new Response(Bun.file("./public/Javier_Vargas_CV.pdf"), {
+    "/cv.pdf": () =>
+      new Response(Bun.file("./public/cv.pdf"), {
         headers: {
           "Content-Type": "application/pdf",
           "Cache-Control": "public, max-age=3600",
-          "Content-Disposition": 'inline; filename="Javier_Vargas_CV.pdf"',
+          "Content-Disposition": 'inline; filename="cv.pdf"',
         },
       }),
     "/*": index,
