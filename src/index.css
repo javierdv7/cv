@@ -413,6 +413,38 @@ html, body, #root {
   font-size: 11px;
 }
 
+/* Touch behavior */
+.dock-app, .dicon, .wc, .fx-entry, .fx-btn, .bw-tile, .urlbar-btn {
+  touch-action: manipulation;
+}
+.window-title { touch-action: none; }
+
+/* ===========================================================
+   Force landscape on mobile (rotate viewport when portrait)
+   =========================================================== */
+@media (max-width: 900px) and (orientation: portrait) {
+  html, body {
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+  }
+  body {
+    position: absolute;
+    top: 0;
+    left: 100vw;
+    width: 100vh;
+    height: 100vw;
+    transform-origin: 0 0;
+    transform: rotate(90deg);
+  }
+  #root {
+    width: 100%;
+    height: 100%;
+  }
+}
+
 /* ---- Widgets (right column, stacked) ---- */
 .widgets {
   position: absolute;

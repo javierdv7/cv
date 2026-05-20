@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode, type MouseEvent as ReactMouseEvent } from "react";
+import { useRef, useState, type ReactNode, type PointerEvent as ReactPointerEvent } from "react";
 import { TopBar } from "./TopBar";
 import { Dock } from "./Dock";
 import { Widgets } from "./Widgets";
@@ -39,6 +39,23 @@ type OpenWindow = {
 
 let nextInstance = 1;
 let nextZ = 10;
+
+function isRotated(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia("(max-width: 900px) and (orientation: portrait)").matches
+  );
+}
+
+function toLocal(cx: number, cy: number): { x: number; y: number } {
+  if (!isRotated()) return { x: cx, y: cy };
+  return { x: cy, y: window.innerWidth - cx };
+}
+
+function localBounds(): { w: number; h: number } {
+  if (!isRotated()) return { w: window.innerWidth, h: window.innerHeight };
+  return { w: window.innerHeight, h: window.innerWidth };
+}
 
 function defaultSize(kind: WindowKind): { w: number; h: number } {
   switch (kind) {
@@ -283,16 +300,21 @@ function Window({
 }) {
   const dragRef = useRef<{ dx: number; dy: number } | null>(null);
 
-  const startDrag = (e: ReactMouseEvent) => {
+  const startDrag = (e: ReactPointerEvent) => {
     if ((e.target as HTMLElement).closest(".window-controls")) return;
     onFocus();
-    dragRef.current = { dx: e.clientX - w.x, dy: e.clientY - w.y };
-    const onMouseMove = (ev: MouseEvent) => {
+    const start = toLocal(e.clientX, e.clientY);
+    dragRef.current = { dx: start.x - w.x, dy: start.y - w.y };
+    const target = e.currentTarget;
+    try { target.setPointerCapture(e.pointerId); } catch {}
+    const move = (ev: PointerEvent) => {
       if (!dragRef.current) return;
-      const nx = ev.clientX - dragRef.current.dx;
-      const ny = ev.clientY - dragRef.current.dy;
-      const maxX = window.innerWidth - 80;
-      const maxY = window.innerHeight - 40;
+      const p = toLocal(ev.clientX, ev.clientY);
+      const nx = p.x - dragRef.current.dx;
+      const ny = p.y - dragRef.current.dy;
+      const b = localBounds();
+      const maxX = b.w - 80;
+      const maxY = b.h - 40;
       onMove(
         Math.min(maxX, Math.max(-w.w + 80, nx)),
         Math.min(maxY, Math.max(28, ny)),
@@ -300,11 +322,13 @@ function Window({
     };
     const up = () => {
       dragRef.current = null;
-      document.removeEventListener("mousemove", onMouseMove);
-      document.removeEventListener("mouseup", up);
+      document.removeEventListener("pointermove", move);
+      document.removeEventListener("pointerup", up);
+      document.removeEventListener("pointercancel", up);
     };
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", up);
+    document.addEventListener("pointermove", move);
+    document.addEventListener("pointerup", up);
+    document.addEventListener("pointercancel", up);
     e.preventDefault();
   };
 
@@ -312,9 +336,9 @@ function Window({
     <div
       className="window"
       style={{ top: w.y, left: w.x, width: w.w, height: w.h, zIndex: w.z }}
-      onMouseDown={onFocus}
+      onPointerDown={onFocus}
     >
-      <div className="window-title" onMouseDown={startDrag}>
+      <div className="window-title" onPointerDown={startDrag}>
         <span>{w.title}</span>
         <span className="window-controls">
           <span className="wc wc-min">_</span>
