@@ -65,8 +65,6 @@ export function Photos() {
   );
 }
 
-const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
 /**
  * Each tile only mounts its media while within about one screen of the
  * visible area, fades in when it actually scrolls into view and fades out
@@ -80,7 +78,6 @@ function Tile({ p, active, onOpen }: { p: Photo; active: boolean; onOpen: () => 
   const tileRef = useRef<HTMLButtonElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const r = p.w / p.h;
-  const autoplay = isVideo(p) && !reducedMotion();
 
   useEffect(() => {
     const el = tileRef.current;
@@ -141,7 +138,7 @@ function Tile({ p, active, onOpen }: { p: Photo; active: boolean; onOpen: () => 
           onLoad={() => setLoaded(true)}
         />
       )}
-      {near && autoplay && (
+      {near && isVideo(p) && (
         <video
           ref={videoRef}
           className={`ph-tile-video ${playing ? "ph-in" : ""}`}
