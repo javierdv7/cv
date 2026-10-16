@@ -1,5 +1,52 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
 import { fetchManifest, isVideo, lg, mp4, sm, type Item as Photo } from "./gallery";
+
+/** Depth of the fade at each edge, as a share of the visible area. */
+const FADE_BAND = 0.3;
+
+/**
+ * Scroll-linked fade: tiles melt out of the black page as they scroll in from
+ * either edge and back into it as they leave, in both directions. One
+ * rAF-throttled pass per scroll frame.
+ */
+function useScrollFade(ref: RefObject<HTMLDivElement | null>, count: number) {
+  useEffect(() => {
+    const root = ref.current;
+    if (!root) return;
+    const bar = root.querySelector<HTMLElement>(".ph-bar");
+    let frame = 0;
+
+    const update = () => {
+      frame = 0;
+      const box = root.getBoundingClientRect();
+      const top = box.top + (bar?.offsetHeight ?? 0);
+      const bottom = box.bottom;
+      const band = (bottom - top) * FADE_BAND;
+      root.querySelectorAll<HTMLElement>(".ph-tile").forEach(el => {
+        const r = el.getBoundingClientRect();
+        if (r.bottom < top - band || r.top > bottom + band) return;
+        // How far the tile has made it into view past its entering edge:
+        // coming up from below it's its top edge, leaving at the top its
+        // bottom edge. Fully visible once that edge is a band deep.
+        const t = Math.min(1, Math.max(0, Math.min(r.bottom - top, bottom - r.top) / band));
+        // smoothstep: soft at both ends of the band
+        el.style.opacity = String(t * t * (3 - 2 * t));
+      });
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+
+    update();
+    root.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      root.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+    };
+  }, [ref, count]);
+}
 
 /** Fresh random order on every visit (Fisher–Yates). */
 function shuffle<T>(xs: T[]): T[] {
@@ -23,6 +70,9 @@ export function Photos() {
     document.title = "javier vargas — photos";
   }, []);
 
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  useScrollFade(scrollRef, items.length);
+
   const show = useCallback((id: string | null) => {
     setOpen(id);
     history.replaceState(null, "", id ? `#${id}` : location.pathname);
@@ -33,7 +83,7 @@ export function Photos() {
 
   return (
     <>
-      <div className="photos">
+      <div className="photos" ref={scrollRef}>
         <header className="ph-bar">
           <a className="ph-bar-item" href="/">◀ cv</a>
           <span className="ph-bar-path">~/photos</span>
