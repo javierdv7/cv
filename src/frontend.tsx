@@ -7,11 +7,14 @@
 
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { App } from "./App";
+import { App, isPlainPage } from "./App";
+
+// /photos and the admin panel are normal scrolling pages: no forced landscape.
+if (isPlainPage()) document.documentElement.classList.add("plain-mode");
 
 // Best-effort landscape lock (only works inside fullscreen / installed PWA;
 // silently no-ops in a regular browser tab — the CSS rotate is the fallback).
-if (typeof window !== "undefined" && "orientation" in screen) {
+if (typeof window !== "undefined" && "orientation" in screen && !isPlainPage()) {
   const so = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> };
   if (so.lock) so.lock("landscape").catch(() => {});
 }

@@ -112,6 +112,16 @@ export function MusicIcon({ size = 28, className }: IconProps) {
   );
 }
 
+export function CameraIcon({ size = 28, className }: IconProps) {
+  return (
+    <svg {...base(size)} className={className}>
+      <path d="M4 11 Q4 9 6 9 L10 9 L12 6 L20 6 L22 9 L26 9 Q28 9 28 11 L28 24 Q28 26 26 26 L6 26 Q4 26 4 24 Z" />
+      <circle cx="16" cy="17" r="5" />
+      <line x1="23" y1="12.5" x2="24.5" y2="12.5" />
+    </svg>
+  );
+}
+
 export function PdfIcon({ size = 28, className }: IconProps) {
   return (
     <svg {...base(size)} className={className}>

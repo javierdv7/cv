@@ -4,18 +4,29 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun --hot src/index.ts",
-    "build": "bun build ./src/index.html --outdir=dist --target=browser --minify --define:process.env.NODE_ENV='\"production\"' --env='BUN_PUBLIC_*' && cp -R public/. dist/",
+    "dev": "bun scripts/ensure-outputs.ts && bun --hot src/index.ts",
+    "build": "bun scripts/ensure-outputs.ts && bun build ./src/index.html --outdir=dist --target=browser --minify --splitting --define:process.env.NODE_ENV='\"production\"' --env='BUN_PUBLIC_*' && cp -R public/. dist/",
     "preview": "bunx serve dist -l 3000",
-    "start": "NODE_ENV=production bun src/index.ts"
+    "start": "bun scripts/ensure-outputs.ts && NODE_ENV=production bun src/index.ts"
   },
   "dependencies": {
+    "@aws-amplify/ui-react": "6.15.6",
+    "aws-amplify": "6.22.1",
+    "exifr": "7.1.3",
+    "mediabunny": "1.61.0",
     "react": "^19",
     "react-dom": "^19"
   },
   "devDependencies": {
+    "@aws-amplify/backend": "1.25.1",
+    "@aws-amplify/backend-cli": "1.10.0",
+    "@types/bun": "latest",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/bun": "latest"
+    "aws-cdk-lib": "2.272.0",
+    "constructs": "10.8.1",
+    "esbuild": "0.28.2",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3"
   }
 }

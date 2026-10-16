@@ -8,6 +8,7 @@ import { findFile, type FsNode } from "./fs";
 import { Markdown } from "./Markdown";
 import {
   BrowserIcon,
+  CameraIcon,
   FolderIcon,
   NotepadIcon,
   PdfIcon,
@@ -228,6 +229,7 @@ export function Desktop() {
     { key: "experiments", label: "experiments.md", icon: <NotepadIcon />, activeId: "file:experiments", open: () => openFileById("experiments") },
     { key: "projects", label: "projects.md", icon: <NotepadIcon />, activeId: "file:projects", open: () => openFileById("projects") },
     { key: "skills", label: "skills.md", icon: <NotepadIcon />, activeId: "file:skills", open: () => openFileById("skills") },
+    { key: "photos", label: "photos", icon: <CameraIcon />, activeId: "photos", open: () => { window.location.href = "/photos"; } },
     { key: "cv", label: "cv.pdf", icon: <PdfIcon />, activeId: "pdf:/cv.pdf", open: () => openPdf("/cv.pdf", "cv.pdf — preview") },
     { key: "browser", label: "browser", icon: <BrowserIcon />, activeId: "browser", open: () => openBrowser("https://cv.local/") },
     { key: "terminal", label: "terminal", icon: <TerminalIcon />, activeId: "terminal", open: openTerminal },

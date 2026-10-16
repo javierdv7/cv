@@ -1,0 +1,27 @@
+customHeaders:
+  - pattern: '**/*'
+    headers:
+      - key: X-Frame-Options
+        value: SAMEORIGIN
+      - key: X-Content-Type-Options
+        value: nosniff
+      - key: Referrer-Policy
+        value: strict-origin-when-cross-origin
+  # Bun's bundler content-hashes every js/css file name
+  - pattern: '**/*.js'
+    headers:
+      - key: Cache-Control
+        value: public, max-age=31536000, immutable
+  - pattern: '**/*.css'
+    headers:
+      - key: Cache-Control
+        value: public, max-age=31536000, immutable
+  # PDF served inline so the in-app preview works
+  - pattern: 'cv.pdf'
+    headers:
+      - key: Content-Type
+        value: application/pdf
+      - key: Content-Disposition
+        value: inline; filename=cv.pdf
+      - key: Cache-Control
+        value: public, max-age=3600

@@ -15,3 +15,11 @@ declare module "*.module.css" {
   const classes: { readonly [key: string]: string };
   export = classes;
 }
+
+declare module "*.css" {
+  /**
+   * With `with { type: "file" }`: the URL of the emitted stylesheet
+   */
+  const path: string;
+  export default path;
+}
