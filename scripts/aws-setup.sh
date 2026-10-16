@@ -13,7 +13,7 @@ set -euo pipefail
 
 export AWS_PROFILE="${AWS_PROFILE:-claude-testing}"
 export AWS_REGION="${AWS_REGION:-sa-east-1}"
-APP_NAME="cv"
+APP_NAME="vargastorres-cv"
 REPO="https://github.com/javierdv7/cv"
 BRANCH="main"
 DOMAIN="vargastorres.cv"
