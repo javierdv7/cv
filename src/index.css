@@ -883,6 +883,12 @@ html, body, #root {
   flex-basis: calc(var(--r) * var(--row-h));
   padding: 0;
   border: 0;
+  /* <button> defaults to a light face; keep the black page behind so tiles
+     fade from and into black. */
+  background: transparent;
+  color: inherit;
+  -webkit-appearance: none;
+  appearance: none;
   margin: 0;
   overflow: hidden;
   cursor: zoom-in;
