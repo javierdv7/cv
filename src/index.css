@@ -890,7 +890,8 @@ html, body, #root {
 }
 .ph-tile > i { display: block; }
 .ph-tile img,
-.ph-tile .ph-tile-video {
+.ph-tile .ph-tile-video,
+.ph-tile-bg {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -898,14 +899,17 @@ html, body, #root {
   object-fit: cover;
   display: block;
   opacity: 0;
-  transition: opacity 0.4s ease-out;
+  transition: opacity 0.6s ease-out;
 }
 .ph-tile .ph-tile-video { pointer-events: none; }
-.ph-tile img.ph-in,
-.ph-tile .ph-tile-video.ph-in { opacity: 1; }
+/* Fade in on scroll into view (once loaded), fade out on the way out. */
+.ph-seen .ph-tile-bg,
+.ph-seen img.ph-in,
+.ph-seen .ph-tile-video.ph-in { opacity: 1; }
 .ph-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .ph-badge {
   position: absolute;
+  z-index: 1;
   top: 8px;
   right: 8px;
   font-size: 10px;
@@ -987,7 +991,7 @@ html, body, #root {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .photos, .ph-viewer, .ph-tile img, .ph-tile-video, .ph-full { animation: none; transition: none; }
+  .photos, .ph-viewer, .ph-tile img, .ph-tile-video, .ph-tile-bg, .ph-full { animation: none; transition: none; }
 }
 
 /* ===========================================================
@@ -1142,3 +1146,4 @@ html, body, #root {
   color: #0a0604;
 }
 .adm-del:focus-visible { outline: 2px solid #ffb066; outline-offset: 2px; }
+.adm-tile img.ph-in { opacity: 1; }

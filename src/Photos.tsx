@@ -1,12 +1,22 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { fetchManifest, isVideo, lg, mp4, sm, type Item as Photo } from "./gallery";
 
+/** Fresh random order on every visit (Fisher–Yates). */
+function shuffle<T>(xs: T[]): T[] {
+  const a = xs.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j]!, a[i]!];
+  }
+  return a;
+}
+
 export function Photos() {
   const [items, setItems] = useState<Photo[]>([]);
   const [open, setOpen] = useState<string | null>(() => location.hash.slice(1) || null);
 
   useEffect(() => {
-    fetchManifest().then(setItems);
+    fetchManifest().then(items => setItems(shuffle(items)));
   }, []);
 
   useEffect(() => {
@@ -57,77 +67,90 @@ export function Photos() {
 
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+/**
+ * Each tile only mounts its media while within about one screen of the
+ * visible area, fades in when it actually scrolls into view and fades out
+ * as it leaves. Videos loop muted while on screen.
+ */
 function Tile({ p, active, onOpen }: { p: Photo; active: boolean; onOpen: () => void }) {
+  const [near, setNear] = useState(false);
+  const [seen, setSeen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [playing, setPlaying] = useState(false);
-  // Videos loop silently in the grid. The <video> mounts once the tile nears
-  // the viewport and only plays while on screen.
-  const [near, setNear] = useState(false);
   const tileRef = useRef<HTMLButtonElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const visible = useRef(false);
-  const activeRef = useRef(active);
   const r = p.w / p.h;
   const autoplay = isVideo(p) && !reducedMotion();
 
   useEffect(() => {
     const el = tileRef.current;
-    if (!autoplay || !el) return;
-    const io = new IntersectionObserver(
-      ([e]) => {
-        if (!e) return;
-        if (e.isIntersecting) setNear(true);
-        visible.current = e.intersectionRatio > 0;
-        const v = videoRef.current;
-        if (!v) return;
-        if (visible.current && activeRef.current) v.play().catch(() => {});
-        else v.pause();
-      },
-      { rootMargin: "300px 0px", threshold: [0, 0.01] },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [autoplay]);
+    // The gallery scrolls inside .photos, not the window.
+    const root = el?.closest(".photos") ?? null;
+    if (!el) return;
+    const nearIo = new IntersectionObserver(([e]) => e && setNear(e.isIntersecting), {
+      root,
+      rootMargin: "100% 0px",
+    });
+    const seenIo = new IntersectionObserver(([e]) => e && setSeen(e.isIntersecting), {
+      root,
+      threshold: 0.1,
+    });
+    nearIo.observe(el);
+    seenIo.observe(el);
+    return () => {
+      nearIo.disconnect();
+      seenIo.disconnect();
+    };
+  }, []);
 
-  // Pause behind the full-screen viewer.
+  // Media unmounts when far away; start fresh when it comes back.
   useEffect(() => {
-    activeRef.current = active;
+    if (!near) {
+      setLoaded(false);
+      setPlaying(false);
+    }
+  }, [near]);
+
+  // Play only while on screen, and never behind the full-screen viewer.
+  useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-    if (active && visible.current) v.play().catch(() => {});
+    if (seen && active) v.play().catch(() => {});
     else v.pause();
-  }, [active]);
+  }, [seen, active, near]);
 
   return (
     <button
       ref={tileRef}
-      className="ph-tile"
-      style={{ "--r": r, background: p.color } as CSSProperties}
+      className={`ph-tile ${seen ? "ph-seen" : ""}`}
+      style={{ "--r": r } as CSSProperties}
       onClick={onOpen}
       aria-label={`open ${isVideo(p) ? "video" : "photo"} ${p.title}`}
     >
       <i style={{ paddingBottom: `${100 / r}%` }} />
-      <img
-        src={sm(p)}
-        alt={p.title}
-        width={p.w}
-        height={p.h}
-        loading="lazy"
-        decoding="async"
-        draggable={false}
-        className={loaded ? "ph-in" : ""}
-        onLoad={() => setLoaded(true)}
-      />
-      {autoplay && near && (
+      <span className="ph-tile-bg" style={{ background: p.color }} />
+      {near && (
+        <img
+          src={sm(p)}
+          alt={p.title}
+          width={p.w}
+          height={p.h}
+          decoding="async"
+          draggable={false}
+          className={loaded ? "ph-in" : ""}
+          onLoad={() => setLoaded(true)}
+        />
+      )}
+      {near && autoplay && (
         <video
           ref={videoRef}
           className={`ph-tile-video ${playing ? "ph-in" : ""}`}
           src={mp4(p)}
           muted
           loop
-          autoPlay={active}
           playsInline
           disablePictureInPicture
+          preload="auto"
           onPlaying={() => setPlaying(true)}
         />
       )}
@@ -150,28 +173,14 @@ function Viewer({
   onStep: (d: 1 | -1) => void;
 }) {
   const closeRef = useRef<HTMLButtonElement | null>(null);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
   const swipe = useRef<{ x: number; moved: boolean } | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => setLoaded(false), [p.id]);
   useEffect(() => closeRef.current?.focus(), []);
 
-  // Try with sound (opening from a click allows it); if the browser blocks
-  // autoplay — e.g. landing on a /photos#id link — fall back to muted.
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    v.play().catch(() => {
-      v.muted = true;
-      v.play().catch(() => {});
-    });
-  }, [p.id]);
-
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      // A focused <video> uses the arrows to seek.
-      if (e.target instanceof HTMLVideoElement && e.key !== "Escape") return;
       if (e.key === "Escape") onClose();
       else if (e.key === "ArrowRight") onStep(1);
       else if (e.key === "ArrowLeft") onStep(-1);
@@ -195,15 +204,7 @@ function Viewer({
           if (swipe.current?.moved) return;
           if (e.target === e.currentTarget) onClose();
         }}
-        onPointerDown={e => {
-          // Don't treat scrubbing the video's control bar as a swipe.
-          const t = e.target as HTMLElement;
-          if (t instanceof HTMLVideoElement && e.clientY > t.getBoundingClientRect().bottom - 64) {
-            swipe.current = null;
-            return;
-          }
-          swipe.current = { x: e.clientX, moved: false };
-        }}
+        onPointerDown={e => (swipe.current = { x: e.clientX, moved: false })}
         onPointerUp={e => {
           if (!swipe.current) return;
           const dx = e.clientX - swipe.current.x;
@@ -214,14 +215,23 @@ function Viewer({
         {isVideo(p) ? (
           <video
             key={p.id}
-            ref={videoRef}
             className="ph-full ph-in"
             src={mp4(p)}
             poster={lg(p)}
-            controls
+            // Silent, like the grid: no audio, no controls; click to pause.
+            muted
+            loop
+            autoPlay
             playsInline
+            disablePictureInPicture
             preload="auto"
             aria-label={p.title}
+            onClick={e => {
+              if (swipe.current?.moved) return;
+              const v = e.currentTarget;
+              if (v.paused) v.play().catch(() => {});
+              else v.pause();
+            }}
             style={{ aspectRatio: `${p.w} / ${p.h}`, background: p.color }}
           />
         ) : (

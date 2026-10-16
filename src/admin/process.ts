@@ -5,7 +5,7 @@
  *
  *   photo → <id>-sm (900px) + <id>-lg (2400px), webp (jpeg where the browser
  *           can't encode webp, e.g. Safari)
- *   video → <id>-v (H.264/AAC mp4, ≤1920px, rotation baked in) + poster sm/lg
+ *   video → <id>-v (silent H.264 mp4, ≤1920px, rotation baked in) + poster sm/lg
  */
 import exifr from "exifr";
 import {
@@ -109,7 +109,7 @@ export async function processVideo(file: File, onProgress: (p: number) => void):
       forceTranscode: true,
       allowTransformationMetadata: false,
     },
-    audio: { codec: "aac" },
+    audio: { discard: true }, // the gallery is silent
     showWarnings: false,
   });
   const lostVideo = conversion.discardedTracks.find(d => d.track.isVideoTrack());
