@@ -34,7 +34,7 @@ export function Photos() {
 
         <main className="ph-grid">
           {items.map(p => (
-            <Tile key={p.id} p={p} onOpen={() => show(p.id)} />
+            <Tile key={p.id} p={p} active={!current} onOpen={() => show(p.id)} />
           ))}
         </main>
       </div>
@@ -55,22 +55,55 @@ export function Photos() {
   );
 }
 
-function Tile({ p, onOpen }: { p: Photo; onOpen: () => void }) {
+const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function Tile({ p, active, onOpen }: { p: Photo; active: boolean; onOpen: () => void }) {
   const [loaded, setLoaded] = useState(false);
-  // Videos preview on mouse hover only; the <video> isn't mounted until then.
-  const [hover, setHover] = useState(false);
   const [playing, setPlaying] = useState(false);
+  // Videos loop silently in the grid. The <video> mounts once the tile nears
+  // the viewport and only plays while on screen.
+  const [near, setNear] = useState(false);
+  const tileRef = useRef<HTMLButtonElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const visible = useRef(false);
+  const activeRef = useRef(active);
   const r = p.w / p.h;
+  const autoplay = isVideo(p) && !reducedMotion();
+
+  useEffect(() => {
+    const el = tileRef.current;
+    if (!autoplay || !el) return;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (!e) return;
+        if (e.isIntersecting) setNear(true);
+        visible.current = e.intersectionRatio > 0;
+        const v = videoRef.current;
+        if (!v) return;
+        if (visible.current && activeRef.current) v.play().catch(() => {});
+        else v.pause();
+      },
+      { rootMargin: "300px 0px", threshold: [0, 0.01] },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [autoplay]);
+
+  // Pause behind the full-screen viewer.
+  useEffect(() => {
+    activeRef.current = active;
+    const v = videoRef.current;
+    if (!v) return;
+    if (active && visible.current) v.play().catch(() => {});
+    else v.pause();
+  }, [active]);
+
   return (
     <button
+      ref={tileRef}
       className="ph-tile"
       style={{ "--r": r, background: p.color } as CSSProperties}
       onClick={onOpen}
-      onPointerEnter={e => isVideo(p) && e.pointerType === "mouse" && setHover(true)}
-      onPointerLeave={() => {
-        setHover(false);
-        setPlaying(false);
-      }}
       aria-label={`open ${isVideo(p) ? "video" : "photo"} ${p.title}`}
     >
       <i style={{ paddingBottom: `${100 / r}%` }} />
@@ -85,18 +118,20 @@ function Tile({ p, onOpen }: { p: Photo; onOpen: () => void }) {
         className={loaded ? "ph-in" : ""}
         onLoad={() => setLoaded(true)}
       />
-      {hover && (
+      {autoplay && near && (
         <video
+          ref={videoRef}
           className={`ph-tile-video ${playing ? "ph-in" : ""}`}
           src={mp4(p)}
           muted
           loop
-          autoPlay
+          autoPlay={active}
           playsInline
+          disablePictureInPicture
           onPlaying={() => setPlaying(true)}
         />
       )}
-      {isVideo(p) && <span className="ph-badge" aria-hidden="true">▶</span>}
+      {isVideo(p) && !playing && <span className="ph-badge" aria-hidden="true">▶</span>}
     </button>
   );
 }
